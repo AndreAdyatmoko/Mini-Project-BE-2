@@ -1,5 +1,3 @@
-// const auth = require("./auth/coba");
+const authController = require("./authController");
 
-// module.exports = {
-// 	auth,
-// };
+module.exports = {authController};

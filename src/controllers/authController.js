@@ -1,75 +1,96 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const db = require('../models');
-
-
-
-
-//=====================================CONTOH NANTINYA ==========================================
-
-/*
+const jwt = require('jsonwebtoken');
+const user = db.user;
 
 const authController = {
-    register: (req, res) => {
+    register: async (req, res) => {
+
         try {
-            const {userName, email, password} = req.body;
-            const isEmailExist = await userName.FindOne({
-                where: {email}
+            const { username, email, phone, password } = req.body;
+            const isEmailExist = await user.findOne({
+                where: { email }
             });
             if (isEmailExist) {
-                return res.status(400).json({
-                    message: 'Email is already exist'
+                return res.status(500).json({
+                    message: "Email atau Username telah digunakan",
                 });
-
-                const salt = await bcrypt.genSalt(10);
-                const hashedPassword = await bcrypt.hash(password, salt);
             }
-            await db.sequelize.trasaction( async(t)=> {
-                const result = await userName.create({
-                    userName,
+            const salt = await bcrypt.genSalt(10);
+            const hashPassword = await bcrypt.hash(password, salt);
+            await db.sequelize.transaction(async (t) => {
+                const result = await user.create({
+                    username,
                     email,
-                    password: hashedPassword
-                }, {trasaction: t});
-
+                    phone,
+                    password: hashPassword
+                }, { transaction: t });
                 return res.status(200).json({
                     message: 'Register success',
                     data: result
-                })
-            })
-        }
-    }
-
-    login: async(req, res) => {
-        try{
-            const {userName, password} = req.body;
-            const checkLogin = await userName.FindOne({
-                where: {userName, password}
             });
-            if (!checkLogin) {
-                return res.status(400).json({
-                    message: 'email or password is not correct'
-                })
-            }
 
-            let payload = {
-                id: checkLogin.id,
-                userName: checkLogin.userName,
-                email: checkLogin.email
-            } 
-
-            const token = jwt.sign(payload, process.env.JWT_SECRET, // JWT_SECRET bisa dilihat pada .env yaa...
-            {
-                expiresIn: '1h'
             });
-            return res.status(200).json({
-                message: 'Login success',
-                data: checkLogin
-            })
+
+        } catch (error) {
+            return res.status(500).json({
+                message: "Register failed",
+                error: error.message
+            });
         }
-    }
-}
+    },
+    login: async (req, res) => {
+      try {
+          const { email, password } = req.body;
 
-module.exports = authController;
+          const checkLogin = await user.findOne({
+              where: {
+                  email,
+                  // password
+              }
+          });
+
+          // if (!checkLogin) {
+          //     return res.status(404).json({
+          //         message: "email not found",
+          //     })
+          // }
+
+          const isValid = await bcrypt.compare(password, checkLogin.password);
+          if (!isValid) {
+              return res.status(404).json({
+                  message: "password is incorrect",
+              })
+          }
+
+          let payload = { 
+              id: checkLogin.id,
+              email: checkLogin.email,
+              phone: checkLogin.phone,
+              username: checkLogin.username
+          }
+
+          const token = jwt.sign(
+              payload, 
+              process.env.JWT_Key,
+              {
+                  expiresIn: '1h'
+              }
+          )
+
+          return res.status(200).json({
+              message: "Login success",
+              data: token
+          })
+      } catch (err) {
+          return res.status(500).json({
+              message: "Register failed",
+              error: err.message
+          })
+      }
+  }
+};
 
 
-*/
+
+module.exports = authController

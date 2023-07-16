@@ -1,10 +1,7 @@
-const express = require("express");
-const router = express.Router();
-// require function dari controller, contoh dibawah
-// const {login} = require('../controllers');
+const {authController} = require('../controllers');
+const router = require('express').Router();
 
-// routing
-// const { coba } = require("../controllers");
-// router.get("/coba", coba.getAll);
+router.post('/register', authController.register);
+router.post('/login', authController.login);
 
 module.exports = router;
