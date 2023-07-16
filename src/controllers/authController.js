@@ -2,20 +2,26 @@ const bcrypt = require('bcrypt');
 const db = require('../models');
 const jwt = require('jsonwebtoken');
 const user = db.user;
+const passwordValidator = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+
 
 const authController = {
     register: async (req, res) => {
 
         try {
             const { username, email, phone, password } = req.body;
+
             const isEmailExist = await user.findOne({
                 where: { email }
             });
+             
             if (isEmailExist) {
                 return res.status(500).json({
                     message: "Email atau Username telah digunakan",
                 });
             }
+      // Validasi password
+
             const salt = await bcrypt.genSalt(10);
             const hashPassword = await bcrypt.hash(password, salt);
             await db.sequelize.transaction(async (t) => {
