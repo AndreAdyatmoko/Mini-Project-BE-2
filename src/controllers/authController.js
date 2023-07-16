@@ -52,15 +52,10 @@ const authController = {
           const checkLogin = await user.findOne({
               where: {
                   email,
-                  // password
+
               }
           });
 
-          // if (!checkLogin) {
-          //     return res.status(404).json({
-          //         message: "email not found",
-          //     })
-          // }
 
           const isValid = await bcrypt.compare(password, checkLogin.password);
           if (!isValid) {
