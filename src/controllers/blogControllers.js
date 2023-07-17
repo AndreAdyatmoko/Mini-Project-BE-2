@@ -66,7 +66,7 @@ const blogController = {
     }
 
     try {
-      const blogs = await blog.findAll({
+      const blogs = await Blog.findAll({
         attributes: { exclude: ["blogCategoryId"] },
         where: whereClause,
         include: [{ model: db.blogCategory }],
