@@ -3,11 +3,11 @@ const app = express();
 app.use(express.json());
 
 const db = require('./models');
-db.sequelize.sync({alter: true});
+// db.sequelize.sync({alter: true});
 const {authRouter, blogRouter, profileRouter} = require('./routes');
 
 app.use("/auth", authRouter);
-// app.use("/blog", blogRouter);
+app.use("/blog", blogRouter);
 // app.use("/profile", profileRouter);
 
 // app.get('/', (req, res) => {

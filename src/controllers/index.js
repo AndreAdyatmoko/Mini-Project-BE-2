@@ -1,3 +1,4 @@
 const authController = require("./authController");
+const blogController = require("./blogControllers")
 
-module.exports = {authController};
+module.exports = {blogController, authController};

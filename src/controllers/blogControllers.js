@@ -1,110 +1,75 @@
-const { Blog } = require('../models');
+const db = require("../models/");
+const Blog = db.blog;
 
 const blogController = {
-  createBlog: async (req, res) => {
-    try {
-      const { title, author, publicationDate, imageLink, category, content, videoLink, keywords, country } = req.body;
-
-      // Simpan data blog baru ke database
-      const newBlog = await Blog.create({
-        title,
-        author,
-        publicationDate,
-        imageLink,
-        category,
-        content,
-        videoLink,
-        keywords,
-        country
-      });
-
-      res.status(201).json({ message: 'Blog created successfully', data: newBlog });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  },
-
-  getBlogs: async (req, res) => {
-    try {
-      // Ambil semua data blog dari database
-      const blogs = await Blog.findAll();
-
-      res.status(200).json({ data: blogs });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  },
-
   getBlogById: async (req, res) => {
+    const { id } = req.params;
+
     try {
-      const { blogId } = req.params;
-
-      // Ambil data blog berdasarkan ID dari database
-      const blog = await Blog.findByPk(blogId);
-
-      if (!blog) {
-        return res.status(404).json({ error: 'Blog not found' });
-      }
-
-      res.status(200).json({ data: blog });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  },
-
-  updateBlog: async (req, res) => {
-    try {
-      const { blogId } = req.params;
-      const { title, author, publicationDate, imageLink, category, content, videoLink, keywords, country } = req.body;
-
-      // Cek apakah blog ada dalam database
-      const existingBlog = await Blog.findByPk(blogId);
-      if (!existingBlog) {
-        return res.status(404).json({ error: 'Blog not found' });
-      }
-
-      // Update data blog
-      await existingBlog.update({
-        title,
-        author,
-        publicationDate,
-        imageLink,
-        category,
-        content,
-        videoLink,
-        keywords,
-        country
+      const blog = await Blog.findOne({
+        attributes: { exclude: ["blogCategoryId"] },
+        where: { id },
+        include: [{ model: db.blogCategory }],
       });
+      if (!blog) return res.status(404).json("data tidak ada");
 
-      res.status(200).json({ message: 'Blog updated successfully', data: existingBlog });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(200).json({ message: "data berhasil didapatkan", data: blog });
+    } catch {
+      res.status(500).json({ message: "data gagal didapatkan" });
     }
   },
 
-  deleteBlog: async (req, res) => {
+  createBlog: async (req, res) => {
+    const {
+      title,
+      content,
+      imgBlog,
+      videoUrl,
+      keywords,
+      categoryId,
+      countryId,
+    } = req.body;
+
     try {
-      const { blogId } = req.params;
+      await db.sequelize.transaction(async (t) => {
+        const result = await Blog.create(
+          {
+            title,
+            content,
+            imgBlog,
+            videoUrl,
+            keywords,
+            categoryId,
+            countryId,
+            userId: req.user.id,
+          },
+          { transaction: t }
+          );
+          console.log(result)
 
-      // Cek apakah blog ada dalam database
-      const existingBlog = await Blog.findByPk(blogId);
-      if (!existingBlog) {
-        return res.status(404).json({ error: 'Blog not found' });
-      }
-
-      // Hapus blog dari database
-      await existingBlog.destroy();
-
-      res.status(200).json({ message: 'Blog deleted successfully' });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+        res.status(200).json({ message: "Blog dibuat", data: result });
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Blog gagal dibuat" });
+      console.log(err);
     }
+  },
+
+  getBlogbyQuery: async (req, res) => {
+    const { title, categoryId, countryId } = req.query;
+    const whereClause = {
+      title:{ [db.Sequelize.Op.like]: `%${title || ""}%` },};
   }
+  if(categoryId){
+    whereClause.categoryId = categoryId;
+  }
+  try {
+    const blog = await blog.findAll({
+      attributes: { exclude: ["blogCategoryId"] },
+      
+    })
+  }
+
 };
 
 module.exports = blogController;

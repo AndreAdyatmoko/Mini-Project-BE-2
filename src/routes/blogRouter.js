@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-// require function dari controller, contoh dibawah
-// const {getBlog} = require('../controllers');
+const {blogController} = require('../controllers');
+const {verifyToken} = require('../middlewares/verify');
 
-// routing
-// router.post('/blog', getBlog);
+router.get("/get/:id", blogController.getBlogById);
+router.post("/create", verifyToken ,blogController.createBlog);
 
 module.exports = router;

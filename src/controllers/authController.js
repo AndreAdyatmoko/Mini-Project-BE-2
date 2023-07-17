@@ -2,7 +2,6 @@ const bcrypt = require('bcrypt');
 const db = require('../models');
 const jwt = require('jsonwebtoken');
 const user = db.user;
-const passwordValidator = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
 
 
 const authController = {
@@ -85,7 +84,7 @@ const authController = {
           })
       } catch (err) {
           return res.status(500).json({
-              message: "Register failed",
+              message: "Login failed",
               error: err.message
           })
       }
