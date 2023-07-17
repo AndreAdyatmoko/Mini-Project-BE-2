@@ -4,11 +4,11 @@ app.use(express.json());
 
 const db = require('./models');
 // db.sequelize.sync({alter: true});
-const {authRouter, blogRouter, profileRouter} = require('./routes');
+const {authRouter, blogRouter, categoryRouter} = require('./routes');
 
 app.use("/auth", authRouter);
 app.use("/blog", blogRouter);
-// app.use("/profile", profileRouter);
+app.use("/category", categoryRouter);
 
 // app.get('/', (req, res) => {
 //   res.json({ message: 'Hello World!' });

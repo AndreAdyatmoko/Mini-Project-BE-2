@@ -11,11 +11,11 @@ const blogController = {
         where: { id },
         include: [{ model: db.blogCategory }],
       });
-      if (!blog) return res.status(404).json("data tidak ada");
+      if (!blog) return res.status(404).json({ message: "Data tidak ada" });
 
-      res.status(200).json({ message: "data berhasil didapatkan", data: blog });
-    } catch {
-      res.status(500).json({ message: "data gagal didapatkan" });
+      res.status(200).json({ message: "Data berhasil didapatkan", data: blog });
+    } catch (err) {
+      res.status(500).json({ message: "Data gagal didapatkan" });
     }
   },
 
@@ -44,8 +44,8 @@ const blogController = {
             userId: req.user.id,
           },
           { transaction: t }
-          );
-          console.log(result)
+        );
+        console.log(result);
 
         res.status(200).json({ message: "Blog dibuat", data: result });
       });
@@ -56,20 +56,27 @@ const blogController = {
   },
 
   getBlogbyQuery: async (req, res) => {
-    const { title, categoryId, countryId } = req.query;
+    const { title, categoryId, orderBy } = req.query;
     const whereClause = {
-      title:{ [db.Sequelize.Op.like]: `%${title || ""}%` },};
-  }
-  if(categoryId){
-    whereClause.categoryId = categoryId;
-  }
-  try {
-    const blog = await blog.findAll({
-      attributes: { exclude: ["blogCategoryId"] },
-      
-    })
-  }
+      title: { [db.Sequelize.Op.like]: `%${title || ""}%` },
+    };
 
+    if (categoryId) {
+      whereClause.categoryId = categoryId;
+    }
+
+    try {
+      const blogs = await blog.findAll({
+        attributes: { exclude: ["blogCategoryId"] },
+        where: whereClause,
+        include: [{ model: db.blogCategory }],
+        order: [['createdAt', orderBy || 'DESC']],
+      });
+      res.status(200).json({ message: "Data berhasil diperoleh", data: blogs });
+    } catch (err) {
+      res.status(500).json({ message: "Data gagal diperoleh" });
+    }
+  },
 };
 
 module.exports = blogController;
