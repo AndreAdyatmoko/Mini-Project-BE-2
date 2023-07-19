@@ -1,9 +1,11 @@
-const express = require('express');
-const router = express.Router();
-// require function dari controller, contoh dibawah
-// const {changeUsername} = require('../controllers');
+const router = require('express').Router();
+const { profileController } = require('../controllers');
+const changePhoneMid = require('../middlewares/changePhoneMid');
+const changeEmailMid = require('../middlewares/changeEmailMid');
+const changeUsernameMid = require('../middlewares/changeUsernameMid');
 
-// routing
-// router.post('/changeUsername', changeUsername);
+router.patch('/changeUsername', changeUsernameMid, profileController.changeUsername);
+router.patch('/changePhone',  changePhoneMid, profileController.changePhone);
+router.patch('/changeEmail', changeEmailMid, profileController.changeEmail);
 
 module.exports = router;
