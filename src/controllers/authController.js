@@ -12,20 +12,16 @@ const authController = {
   register: async (req, res) => {
     try {
       const { username, email, phone, password } = req.body;
-
       const isEmailExist = await user.findOne({
         where: { email }
       });
-
       if (isEmailExist) {
         return res.status(500).json({
           message: "Email atau Username telah digunakan"
         });
       }
-
       const salt = await bcrypt.genSalt(10);
       const hashPassword = await bcrypt.hash(password, salt);
-
       await db.sequelize.transaction(async (t) => {
         const result = await user.create(
           {
@@ -37,7 +33,6 @@ const authController = {
           },
           { transaction: t }
         );
-
         let payload = { id: result.id };
         const token = jwt.sign(
           payload, process.env.JWT_Key,
@@ -70,7 +65,7 @@ const authController = {
         });
 
         return res.status(200).json({
-          message: ' Verifikasi berhasil',
+          message: ' Registrasi berhasil',
           data: result
         });
       });
@@ -84,11 +79,11 @@ const authController = {
 
   verifyEmail: async (req, res) => {
     try {
-      const { userId, token } = req.params;
+      const { id, token } = req.params;
 
       // Verifikasi token
       const decoded = jwt.verify(token, process.env.JWT_Key);
-      if (!decoded || decoded.id !== parseInt(userId)) {
+      if (!decoded || decoded.id !== parseInt(id)) {
         return res.status(400).json({
           message: 'Invalid token'
         });
@@ -97,7 +92,7 @@ const authController = {
       // Update isVerified menjadi true
       const updatedUser = await user.update(
         { isVerified: true },
-        { where: { id: userId } }
+        { where: { id: id } }
       );
 
       if (updatedUser) {
