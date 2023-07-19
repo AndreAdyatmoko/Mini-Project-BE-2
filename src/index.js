@@ -10,9 +10,6 @@ app.use("/auth", authRouter);
 app.use("/blog", blogRouter);
 app.use("/category", categoryRouter);
 
-// app.get('/', (req, res) => {
-//   res.json({ message: 'Hello World!' });
-// })
 
 app.listen(3000, () => {
   console.log("Server telah dijalankan pada port 3000");

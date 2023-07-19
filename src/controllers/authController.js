@@ -3,15 +3,10 @@ const db = require('../models');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const user = db.user;
-
-function generateVerificationCode() {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return code;
-}
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+const fs = require('fs').promises;
+const handlebars = require('handlebars');
 
 const authController = {
   register: async (req, res) => {
@@ -30,8 +25,7 @@ const authController = {
 
       const salt = await bcrypt.genSalt(10);
       const hashPassword = await bcrypt.hash(password, salt);
-      const verificationCode = generateVerificationCode();
-      
+
       await db.sequelize.transaction(async (t) => {
         const result = await user.create(
           {
@@ -40,39 +34,43 @@ const authController = {
             phone,
             password: hashPassword,
             isVerified: false,
-            verificationCode
           },
           { transaction: t }
         );
 
+        let payload = { id: result.id };
+        const token = jwt.sign(
+          payload, process.env.JWT_Key,
+          { expiresIn: '1h' });
+
+        const redirect = `http://localhost:3000/auth/verify/${result.id}/${token}`;
+
+        const templatePath = path.resolve(__dirname, '../email/verify.html');
+        const templateContent = await fs.readFile(templatePath, 'utf-8');
+        const template = handlebars.compile(templateContent);
+        const rendered = template({ redirect });
+
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
-            user: process.env.EMAIL,
-            pass: process.env.PASSWORD
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
           },
-          host: 'smtp.gmail.com',
-          port: 587,
-          secure: false
-        });
-
-        const mailOptions = {
-          from: process.env.EMAIL,
-          to: email,
-          subject: 'Verifikasi Akun',
-          text: `Hai Kakak, verif emailnya disini biar bisa login ya 😉! Kode Verifikasi: ${verificationCode}`
-        };
-
-        transporter.sendMail(mailOptions, function (error, info) {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log('Email sent: ' + info.response);
+          tls: {
+            rejectUnauthorized: false
           }
         });
 
+        // Pengiriman email
+        await transporter.sendMail({
+          from: process.env.EMAIL,
+          to: result.email,
+          subject: 'Verifikasi Akun',
+          html: rendered
+        });
+
         return res.status(200).json({
-          message: 'Mengirim email verifikasi',
+          message: ' Verifikasi berhasil',
           data: result
         });
       });
@@ -84,87 +82,81 @@ const authController = {
     }
   },
 
-  verifyAccount: async (req, res) => {
+  verifyEmail: async (req, res) => {
     try {
-      const { email, verificationCode } = req.body;
-      const existingUser = await user.findOne({
-        where: {
-          email,
-          verificationCode
-        }
-      });
+      const { userId, token } = req.params;
 
-      if (!existingUser) {
-        return res.status(404).json({
-          message: "Kode verifikasi tidak valid"
+      // Verifikasi token
+      const decoded = jwt.verify(token, process.env.JWT_Key);
+      if (!decoded || decoded.id !== parseInt(userId)) {
+        return res.status(400).json({
+          message: 'Invalid token'
         });
       }
 
-      await user.update(
+      // Update isVerified menjadi true
+      const updatedUser = await user.update(
         { isVerified: true },
-        { where: { email } }
+        { where: { id: userId } }
       );
 
-      return res.status(200).json({
-        message: "Verifikasi berhasil",
-        data: existingUser
-      });
+      if (updatedUser) {
+        return res.status(200).json({
+          message: 'Verifikasi email berhasil',
+        });
+      } else {
+        return res.status(500).json({
+          message: 'Gagal memperbarui status verifikasi email',
+        });
+      }
     } catch (error) {
       return res.status(500).json({
-        message: "Verifikasi gagal",
+        message: 'Verifikasi email gagal',
         error: error.message
       });
     }
   },
 
+  login: async (req, res) => {
+    try {
+      const { email, password } = req.body;
 
-    login: async (req, res) => {
-      try {
-          const { email, password } = req.body;
+      const checkLogin = await user.findOne({
+        where: {
+          email,
+        }
+      });
 
-          const checkLogin = await user.findOne({
-              where: {
-                  email,
-
-              }
-          });
-
-
-          const isValid = await bcrypt.compare(password, checkLogin.password);
-          if (!isValid) {
-              return res.status(404).json({
-                  message: "password is incorrect",
-              })
-          }
-
-          let payload = { 
-              id: checkLogin.id,
-              email: checkLogin.email,
-              phone: checkLogin.phone,
-              username: checkLogin.username
-          }
-
-          const token = jwt.sign(
-              payload, 
-              process.env.JWT_Key,
-              {
-                  expiresIn: '1h'
-              }
-          )
-
-          return res.status(200).json({
-              message: "Login success",
-              data: token
-          })
-      } catch (err) {
-          return res.status(500).json({
-              message: "Login failed",
-              error: err.message
-          })
+      const isValid = await bcrypt.compare(password, checkLogin.password);
+      if (!isValid) {
+        return res.status(404).json({
+          message: "password is incorrect",
+        });
       }
+
+      let payload = {
+        id: checkLogin.id,
+        email: checkLogin.email,
+        phone: checkLogin.phone,
+        username: checkLogin.username
+      };
+
+      const token = jwt.sign(
+        payload, process.env.JWT_Key,
+        { expiresIn: '1h' }
+      );
+
+      return res.status(200).json({
+        message: "Login success",
+        data: token
+      });
+    } catch (err) {
+      return res.status(500).json({
+        message: "Login failed",
+        error: err.message
+      });
+    }
   }
 };
 
-
-
-module.exports = authController
+module.exports = authController;

@@ -2,10 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('users', 'verificationCode', {
-      type: Sequelize.STRING,
-      allowNull: true,
-    });
+    // Kosongkan saja, karena ini adalah migration untuk menghapus kolom
   },
 
   down: async (queryInterface, Sequelize) => {

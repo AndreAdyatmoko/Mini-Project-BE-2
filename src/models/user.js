@@ -26,10 +26,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
-      verificationCode: DataTypes.STRING, // Kolom untuk menyimpan kode verifikasi
-      createdAt: {
-        type: DataTypes.DATE,
-      },
       updatedAt: {
         type: DataTypes.DATE,
       },
