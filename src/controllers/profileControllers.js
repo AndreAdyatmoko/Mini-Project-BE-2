@@ -1,5 +1,8 @@
 const db = require('../models');
 const user = db.user;
+const fs = require("fs").promises;
+const bcrypt = require('bcrypt');
+
 
 const profileController = {
     changeUsername: async (req, res) => {
@@ -52,7 +55,70 @@ const profileController = {
             message: error.message
         })
     }
-    }
+    },
+
+    changeImage: async (req, res) => {
+        try {
+          const { id } = req.user;
+              const oldAva = await user.findOne({ where: { id } });
+          
+              if (oldAva.imgProfile) {
+            fs.unlink(oldAva.imgProfile, (err) => {
+              if (err) return res.status(500).json({
+                message: "ada kesalahan",
+                error: err.message
+              });
+            });
+        }
+            await db.sequelize.transaction(async (t) => {
+              const result = await user.update(
+                { imgProfile: req.file.path },
+                { where: { id } },
+                {transaction: t }
+              );
+
+              return res.status(200).json({
+                message: "gambar berhasil diubah",
+                data: result
+              });
+            });
+          
+        } catch (error) {
+          return res.status(500).json({
+            message: "gambar gagal diubah",
+            error: error.message
+          });
+        }
+      },
+
+      changePassword : async (req, res) => {
+        
+        try {
+          const { oldpassword, newpassword, confirmNewPassword } = req.body;
+          console.log(req.user);
+
+          const tes = await user.findOne({where: { id: req.user.id }});
+
+          const checkOldPassword = await bcrypt.compare(oldpassword, tes.password);
+            if (!checkOldPassword){
+                return res.status(404).json({message: "password lama salah"});
+            }
+            if (newpassword !== confirmNewPassword){
+                return res.status(404).json({message: "password tidak sama"});
+            }
+            
+            const salt = await bcrypt.genSalt(10);
+            const hashNewPassword = await bcrypt.hash(newpassword, salt);
+
+            const update = await user.update(
+              {password: hashNewPassword},
+              { where:  { id: tes.id } }
+              );
+              res.status(200).json({message: "password berhasil diubah"});
+          } catch (error) {
+              res.status(500).json({message: error.message});
+          }
+      }
 }
 
 

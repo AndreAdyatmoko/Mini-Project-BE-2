@@ -26,9 +26,5 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// const checkRole = async (req, rest, next) => {
-//   if (req.user.isAdmin) return next();
-//   else return res.status(400).send("invalid role");
-// };
 
 module.exports =  {verifyToken} ;
