@@ -78,8 +78,9 @@ const authController = {
   },
 
   verifyEmail: async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
     try {
-      const { id, token } = req.params;
+      const { id } = req.params;
 
       // Verifikasi token
       const decoded = jwt.verify(token, process.env.JWT_Key);
@@ -113,6 +114,7 @@ const authController = {
   },
 
   login: async (req, res) => {
+
     try {
       const { email, password } = req.body;
 
@@ -126,6 +128,12 @@ const authController = {
       if (!isValid) {
         return res.status(404).json({
           message: "password is incorrect",
+        });
+      }
+
+      if(user.isVerified === false){
+        return res.status(404).json({
+          message: "Kamu belum terverifikasi"
         });
       }
 

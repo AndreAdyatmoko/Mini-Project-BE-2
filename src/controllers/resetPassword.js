@@ -71,26 +71,25 @@ const forgotPassword = async (req, res) => {
 }
 
 const resetPassword = async (req, res) => {
+    
     const  token  = req.headers.authorization?.split(" ")[1];
-    const {password, confrimPassword} = req.body;
+    const {password} = req.body;
 
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_Key);
-
-        if(password !== confrimPassword){
-            return res.status(400).json({message: "Password tidak sesuai"});
-        }
         const user = await Modeluser.findOne({
             where: { id: decodedToken.id }
         })
         if(!user){
             return res.status(400).json({message: "User tidak ditemukan"});
-        }
-        user.password = password; 
+        } 
         bcrypt.genSalt(10, (err, salt) => {
-            bcrypt.hash(user.password, salt, (err, hash) => {
+            bcrypt.hash(password, salt, async (err, hash) => {
+                if(err) {
+                    return res.status(500).json({ message: "Error saat menghash password" });
+                }
                 user.password = hash;
-                user.save();
+                await user.save();
                 res.status(200).json({message: "Password berhasil diubah"});
             })
         })

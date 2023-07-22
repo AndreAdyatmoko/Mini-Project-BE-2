@@ -3,6 +3,7 @@ const blogRouter = require("./blogRouter");
 const categoryRouter = require("./categoryRoutes");
 const profileRouter = require("./profileRouter");
 const resetPassword = require("./resetPassword");
+const countryRouter = require("./countryRouter");
 
 
 module.exports = {
@@ -10,5 +11,6 @@ module.exports = {
     blogRouter,
     categoryRouter,
     profileRouter,
-    resetPassword
+    resetPassword,
+    countryRouter
 }

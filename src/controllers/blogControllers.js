@@ -20,7 +20,7 @@ const blogController = {
   },
 
   createBlog: async (req, res) => {
-    const {title,content,imgBlog,videoUrl,keywords,categoryId,countryId,} = req.body;
+    const {title,content,videoUrl,keywords,categoryId,countryId,} = req.body;
 
     // Pengecekan verifikasi
     
@@ -32,7 +32,14 @@ const blogController = {
       }
       await db.sequelize.transaction(async (t) => {
         const result = await Blog.create(
-          { title, content, imgBlog, videoUrl, keywords, categoryId,countryId, userId: req.user.id,}, { transaction: t });
+          { title,
+            content,
+            imgBlog: req.file ? req.file.filename : null, 
+            videoUrl, 
+            keywords,
+            categoryId,
+            countryId, 
+            userId: req.user.id,}, { transaction: t });
 
         res.status(200).json({ message: "Blog dibuat", data: result });
       });

@@ -1,9 +1,8 @@
 const router = require('express').Router();
-const { verify } = require('jsonwebtoken');
 const {forgotPassword, resetPassword } = require('../controllers/resetPassword');
-
+const passwordValidatorMiddleware = require('../middlewares/resetPassMid');
 
 router.put('/forgot', forgotPassword);
-router.patch('/reset',resetPassword );
+router.patch('/reset',passwordValidatorMiddleware,resetPassword );
 
 module.exports = router;
