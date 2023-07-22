@@ -13,7 +13,7 @@ const profileController = {
             await loggedInUser.save();
 
             return res.status(200).json({
-                message: "Username telah diubah",
+                message: "Username telah diubah cek Email ya 😉",
                 data: loggedInUser
             })
         }catch(error){
@@ -30,7 +30,7 @@ const profileController = {
             loggedInPhone.phone = newphone;
             await loggedInPhone.save();
             return res.status(200).json({
-                message: "Nomor telfon telah dirubah",
+                message: "Nomor telfon telah dirubah cek email ya 😉",
                 data: loggedInPhone
             })
         }catch(error){
@@ -47,7 +47,7 @@ const profileController = {
             loggedIn.email = newemail;
             await loggedIn.save();
             return res.status(200).json({
-                message: "Email telah diubah",
+                message: "Email telah diubah cek email ya 😉",
                 data: loggedIn
             })
     }catch(error){
@@ -78,7 +78,7 @@ const profileController = {
               );
 
               return res.status(200).json({
-                message: "gambar berhasil diubah",
+                message: "gambar berhasil diubah 😉",
                 data: result
               });
             });

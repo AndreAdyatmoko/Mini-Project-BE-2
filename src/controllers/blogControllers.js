@@ -20,32 +20,19 @@ const blogController = {
   },
 
   createBlog: async (req, res) => {
-    const {
-      title,
-      content,
-      imgBlog,
-      videoUrl,
-      keywords,
-      categoryId,
-      countryId,
-    } = req.body;
+    const {title,content,imgBlog,videoUrl,keywords,categoryId,countryId,} = req.body;
 
+    // Pengecekan verifikasi
+    
+    if (req.user.isVerified === false || 0) {
+      return res.status(403).json({ message: "Kamu tidak dapat membuat blog karena belum diverifikasi" });}
     try {
+      if (content.length > 500) {
+        return res.status(400).json({ message: "Konten terlalu panjang, maksimal 500 karakter" });
+      }
       await db.sequelize.transaction(async (t) => {
         const result = await Blog.create(
-          {
-            title,
-            content,
-            imgBlog,
-            videoUrl,
-            keywords,
-            categoryId,
-            countryId,
-            userId: req.user.id,
-          },
-          { transaction: t }
-        );
-        console.log(result);
+          { title, content, imgBlog, videoUrl, keywords, categoryId,countryId, userId: req.user.id,}, { transaction: t });
 
         res.status(200).json({ message: "Blog dibuat", data: result });
       });

@@ -65,7 +65,7 @@ const authController = {
         });
 
         return res.status(200).json({
-          message: ' Registrasi berhasil',
+          message: ' Registrasi berhasil silahkan cek email untuk verifikasi akun',
           data: result
         });
       });
@@ -133,7 +133,8 @@ const authController = {
         id: checkLogin.id,
         email: checkLogin.email,
         phone: checkLogin.phone,
-        username: checkLogin.username
+        username: checkLogin.username,
+        isVerified: checkLogin.isVerified
       };
 
       const token = jwt.sign(
