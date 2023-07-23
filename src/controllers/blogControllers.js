@@ -71,6 +71,41 @@ const blogController = {
       res.status(500).json({ message: "Data gagal diperoleh" });
     }
   },
+
+  getBlogsByQueryWithPagination: async (req, res) => {
+    const { title, categoryId, orderBy, page } = req.query;
+    const limit = 10; // Jumlah data per halaman
+    const offset = limit * (page - 1); // Hitung offset berdasarkan halaman
+
+    const whereClause = {
+      title: { [db.Sequelize.Op.like]: `%${title || ""}%` },
+    };
+
+    if (categoryId) {
+      whereClause.categoryId = categoryId;
+    }
+
+    try {
+      const blogs = await Blog.findAndCountAll({
+        attributes: { exclude: ["blogCategoryId"] },
+        where: whereClause,
+        include: [{ model: db.blogCategory }],
+        order: [['createdAt', orderBy || 'DESC']],
+        limit,
+        offset,
+      });
+
+      const totalPages = Math.ceil(blogs.count / limit);
+      res.status(200).json({
+        message: "Data berhasil diperoleh",
+        data: blogs.rows,
+        currentPage: parseInt(page),
+        totalPages,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Data gagal diperoleh" });
+    }
+  },
 };
 
 module.exports = blogController;

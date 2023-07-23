@@ -7,6 +7,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const fs = require('fs').promises;
 const handlebars = require('handlebars');
+const { sendVerificationEmail } = require('../helper/emailHelper');
 
 const authController = {
   register: async (req, res) => {
@@ -40,30 +41,7 @@ const authController = {
 
         const redirect = `http://localhost:3000/auth/verify/${result.id}/${token}`;
 
-        const templatePath = path.resolve(__dirname, '../email/verify.html');
-        const templateContent = await fs.readFile(templatePath, 'utf-8');
-        const template = handlebars.compile(templateContent);
-        const rendered = template({ redirect });
-
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-          },
-          tls: {
-            rejectUnauthorized: false
-          }
-        });
-
-        // Pengiriman email
-        await transporter.sendMail({
-          from: process.env.EMAIL,
-          to: result.email,
-          subject: 'Verifikasi Akun',
-          html: rendered
-        });
-
+        await sendVerificationEmail(result.email, redirect);
         return res.status(200).json({
           message: ' Registrasi berhasil silahkan cek email untuk verifikasi akun',
           data: result
@@ -81,7 +59,6 @@ const authController = {
     const token = req.headers.authorization?.split(" ")[1];
     try {
       const { id } = req.params;
-
       // Verifikasi token
       const decoded = jwt.verify(token, process.env.JWT_Key);
       if (!decoded || decoded.id !== parseInt(id)) {
@@ -89,7 +66,6 @@ const authController = {
           message: 'Invalid token'
         });
       }
-
       // Update isVerified menjadi true
       const updatedUser = await user.update(
         { isVerified: true },
