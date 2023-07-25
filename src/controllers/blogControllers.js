@@ -27,9 +27,6 @@ const blogController = {
     if (req.user.isVerified === false || 0) {
       return res.status(403).json({ message: "Kamu tidak dapat membuat blog karena belum diverifikasi" });}
     try {
-      if (content.length > 500) {
-        return res.status(400).json({ message: "Konten terlalu panjang, maksimal 500 karakter" });
-      }
       await db.sequelize.transaction(async (t) => {
         const result = await Blog.create(
           { title,
@@ -40,7 +37,7 @@ const blogController = {
             categoryId,
             countryId, 
             userId: req.user.id,}, { transaction: t });
-
+            
         res.status(200).json({ message: "Blog dibuat", data: result });
       });
     } catch (err) {
